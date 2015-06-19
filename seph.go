@@ -30,7 +30,6 @@ type part struct {
 	H                   float64 `val:"defNaN"`
 }
 
-
 // astrometricJ2000 cut and paste from meeus/elliptic, modified to return
 // additional values phase angle β and observer-object range Δ.
 //
@@ -147,7 +146,7 @@ func main() {
 	if err != nil {
 		log.Fatal(err)
 	}
-  ep := julian.CalendarGregorianToJD(y, m, d)
+	ep := julian.CalendarGregorianToJD(y, m, d)
 	t1, err := time.Parse("2006-01-02T15:04:05Z", os.Args[2])
 	if err != nil {
 		log.Fatal(err)
@@ -171,24 +170,25 @@ func main() {
 	if err != nil {
 		log.Fatal(err)
 	}
-	fmt.Println("  RA       Dec     V    Elongation")
+	fmt.Println(os.Args[1], "Epoch", y, m, d)
+	fmt.Println("\n           Time      RA          Dec        V     Elongation")
 	f := posFunc(&el, e)
 	α, δ, ψ, β, r, Δ := f(julian.TimeToJD(t1))
 	vs := ""
 	if v := vmag(s.H, s.G, β, r, Δ); v >= 6 {
 		vs = fmt.Sprintf("%4.1f", v)
 	}
-	printLine := func() {
-		fmt.Printf("%v %v %4s, %v\n",
+	printLine := func(t time.Time) {
+		fmt.Printf("%s  %2v  %2v  %4s  %v\n", t.Format("2006-01-02 15:04:05"),
 			sexa.NewFmtRA(α), sexa.NewFmtAngle(δ), vs, sexa.NewFmtAngle(ψ))
 	}
-	printLine()
+	printLine(t1)
 
 	α, δ, ψ, β, r, Δ = f(julian.TimeToJD(t2))
 	if vs > "" {
 		vs = fmt.Sprintf("%4.1f", vmag(s.H, s.G, β, r, Δ))
 	}
-	printLine()
+	printLine(t2)
 }
 
 func vmag(H, G, β, r, Δ float64) float64 {
