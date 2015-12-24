@@ -16,12 +16,6 @@ import (
 	"github.com/soniakeys/observation"
 	"github.com/soniakeys/sexagesimal"
 
-	"github.com/soniakeys/meeus/base"
-	"github.com/soniakeys/meeus/julian"
-	"github.com/soniakeys/meeus/kepler"
-	pp "github.com/soniakeys/meeus/planetposition"
-	"github.com/soniakeys/meeus/solarxyz"
-
 	"github.com/naoina/toml"
 )
 
@@ -102,32 +96,30 @@ func main() {
 	if err != nil {
 		log.Fatal(err)
 	}
-	ep := julian.CalendarGregorianToJD(y, m, d)
+	ep := astro.CalendarGregorianToJD(y, m, d)
 	// var inc time.Duration
-	var el Elements
+	var el astro.Elements
 	el.Axis = s.A
 	el.Ecc = s.E
 	el.Inc = s.Inc * math.Pi / 180
 	el.ArgP = s.Peri * math.Pi / 180
 	el.Node = s.Node * math.Pi / 180
-	el.TimeP = ep - (s.MA*math.Pi/180)*s.A*math.Sqrt(s.A)/base.K
+	el.TimeP = ep - (s.MA*math.Pi/180)*s.A*math.Sqrt(s.A)/astro.K
 
-	e, err := pp.LoadPlanet(pp.Earth)
+	e, err := astro.LoadPlanet(astro.Earth)
 	if err != nil {
 		log.Fatal(err)
 	}
 	sunPos := func(jde float64) (x, y, z, r float64) {
-		// TODO replace with func that returns r as well)
-		X, Y, Z := solarxyz.PositionJ2000(e, jde)
-		return X, Y, Z, math.Sqrt(X*X + Y*Y + Z*Z)
+		return astro.SolarPositionJ2000(e, jde)
 	}
 
-  fmt.Println()
+	fmt.Println()
 	fmt.Println(j.Desig, "Epoch", y, m, d)
-  fmt.Println("Site:", j.Site)
+	fmt.Println("Site:", j.Site)
 	fmt.Println("\n           Time      RA          Dec        V     Elongation")
-	o := newOrbit(&el)
-	α, δ, ψ, β, r, Δ := observation.AstrometricJ2000(julian.TimeToJD(j.Start),
+	o := astro.NewOrbit(&el)
+	α, δ, ψ, β, r, Δ := observation.AstrometricJ2000(astro.TimeToJD(j.Start),
 		sunPos, o.Position)
 	vs := ""
 	if v := observation.Vmag(s.H, s.G, β, r, Δ); v >= 6 {
@@ -141,66 +133,10 @@ func main() {
 	if j.End.IsZero() {
 		return
 	}
-	α, δ, ψ, β, r, Δ = observation.AstrometricJ2000(julian.TimeToJD(j.End),
+	α, δ, ψ, β, r, Δ = observation.AstrometricJ2000(astro.TimeToJD(j.End),
 		sunPos, o.Position)
 	if vs > "" {
 		vs = fmt.Sprintf("%4.1f", observation.Vmag(s.H, s.G, β, r, Δ))
 	}
 	printLine(j.End)
-}
-
-type Elements struct {
-	Axis  float64 // Semimajor axis, a, in AU
-	Ecc   float64 // Eccentricity, e
-	Inc   float64 // Inclination, i, in radians
-	ArgP  float64 // Argument of perihelion, ω, in radians
-	Node  float64 // Longitude of ascending node, Ω, in radians
-	TimeP float64 // Time of perihelion, T, as jde
-}
-type orbit struct {
-	k          *Elements
-	n          float64
-	_A, _B, _C float64
-	a, b, c    float64
-}
-
-func newOrbit(k *Elements) *orbit {
-	o := &orbit{
-		k: k,
-		n: astro.K / k.Axis / math.Sqrt(k.Axis),
-	}
-	const sε = base.SOblJ2000
-	const cε = base.COblJ2000
-	sΩ, cΩ := math.Sincos(k.Node)
-	si, ci := math.Sincos(k.Inc)
-	// (33.7) p. 228
-	F := cΩ
-	G := sΩ * cε
-	H := sΩ * sε
-	P := -sΩ * ci
-	Q := cΩ*ci*cε - si*sε
-	R := cΩ*ci*sε + si*cε
-	// (33.8) p. 229
-	o._A = math.Atan2(F, P)
-	o._B = math.Atan2(G, Q)
-	o._C = math.Atan2(H, R)
-	o.a = math.Hypot(F, P)
-	o.b = math.Hypot(G, Q)
-	o.c = math.Hypot(H, R)
-	return o
-}
-
-func (o *orbit) Position(jde float64) (x, y, z, r float64) {
-	M := o.n * (jde - o.k.TimeP)
-	E, err := kepler.Kepler2b(o.k.Ecc, M, 15)
-	if err != nil {
-		E = kepler.Kepler3(o.k.Ecc, M)
-	}
-	r = kepler.Radius(E, o.k.Ecc, o.k.Axis)
-	ν := kepler.True(E, o.k.Ecc)
-	// (33.9) p. 229
-	x = r * o.a * math.Sin(o._A+o.k.ArgP+ν)
-	y = r * o.b * math.Sin(o._B+o.k.ArgP+ν)
-	z = r * o.c * math.Sin(o._C+o.k.ArgP+ν)
-	return
 }
