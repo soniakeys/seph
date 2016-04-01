@@ -14,7 +14,7 @@ Then it turned out that while the meeus packages were sufficient for
 computing RA and dec, there were parts missing for computing apparent
 magnitude.  The math is all in Meeus's book, but this is one of the cases
 where there was no worked example in the book and so I had not implemented
-functions in the package.  (That was a critereon for inclusion.  With no
+functions in the package.  (That was a criterion for inclusion.  With no
 worked example, there was no test data provided and so no simple correctness
 test.  I wanted a test for each included function.)
 

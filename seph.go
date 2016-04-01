@@ -55,7 +55,7 @@ func main() {
 	if j.Start.IsZero() {
 		log.Fatal("no start in seph.job")
 	}
-	var par *observation.ParallaxConst
+	//var par *observation.ParallaxConst
 	if strings.TrimSpace(j.Site) == "" {
 		j.Site = "500"
 	} else if j.Site != "500" {
@@ -66,7 +66,7 @@ func main() {
 			log.Fatal(err)
 		}
 		var ok bool
-		if par, ok = p[j.Site]; !ok {
+		if /*par*/ _, ok = p[j.Site]; !ok {
 			log.Fatal("site ", j.Site, " unknown")
 		}
 	}
