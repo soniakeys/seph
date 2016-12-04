@@ -15,6 +15,7 @@ import (
 	"github.com/soniakeys/mpcformat"
 	"github.com/soniakeys/observation"
 	"github.com/soniakeys/sexagesimal"
+	"github.com/soniakeys/unit"
 
 	"github.com/naoina/toml"
 )
@@ -127,7 +128,10 @@ func main() {
 	}
 	printLine := func(t time.Time) {
 		fmt.Printf("%s  %2v  %2v  %4s  %v\n", t.Format("2006-01-02 15:04:05"),
-			sexa.NewFmtRA(α), sexa.NewFmtAngle(δ), vs, sexa.NewFmtAngle(ψ))
+			sexa.FmtRA(unit.RA(α)),
+			sexa.FmtAngle(unit.Angle(δ)),
+			vs,
+			sexa.FmtAngle(unit.Angle(ψ)))
 	}
 	printLine(j.Start)
 	if j.End.IsZero() {
