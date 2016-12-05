@@ -102,9 +102,9 @@ func main() {
 	var el astro.Elements
 	el.Axis = s.A
 	el.Ecc = s.E
-	el.Inc = s.Inc * math.Pi / 180
-	el.ArgP = s.Peri * math.Pi / 180
-	el.Node = s.Node * math.Pi / 180
+	el.Inc = unit.AngleFromDeg(s.Inc)
+	el.ArgP = unit.AngleFromDeg(s.Peri)
+	el.Node = unit.AngleFromDeg(s.Node)
 	el.TimeP = ep - (s.MA*math.Pi/180)*s.A*math.Sqrt(s.A)/astro.K
 
 	e, err := astro.LoadPlanet(astro.Earth)
