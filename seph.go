@@ -97,7 +97,7 @@ func main() {
 	if err != nil {
 		log.Fatal(err)
 	}
-	ep := astro.CalendarGregorianToJD(y, m, d)
+	ep := astro.FFCalendarGregorianToJD(y, m, d)
 	// var inc time.Duration
 	var el astro.Elements
 	el.Axis = s.A
@@ -116,7 +116,7 @@ func main() {
 	}
 
 	fmt.Println()
-	fmt.Println(j.Desig, "Epoch", y, m, d)
+	fmt.Println(s.Desig, "Epoch", y, m, d)
 	fmt.Println("Site:", j.Site)
 	fmt.Println("\n           Time      RA          Dec        V     Elongation")
 	o := astro.NewOrbit(&el)
